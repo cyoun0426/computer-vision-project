@@ -6,6 +6,9 @@ import cv2
 import numpy as np
 from skimage import measure
 from sys import platform as sys_pf
+from glob import glob
+import os
+import string
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -15,31 +18,49 @@ if sys_pf == 'darwin':
 import matplotlib.pyplot as plt
 plt.plot()
 
-# Read the image
-image = cv2.imread('A1014.jpg')                                 # CHANGE NAME OF FILE 1014, 2194
-image = cv2.resize(image, (500, 500))
-cv2.imshow('Original image', image)
+# Global variables
+Counter = 0
 
-# BGR image
-mask = cv2.inRange(image, np.array([22, 22, 58]), np.array([84, 83, 118]))
-cv2.imshow('Mask image', mask)
+for letter in string.ascii_uppercase:
+    images = glob('dataset/' + letter + '/*.jpg')
+    newfolder = './images/' + letter + '/'
+    if not os.path.exists(newfolder):
+        os.makedirs(newfolder)
 
-# Morphological processing
-kernel = np.ones((5,5), np.uint8)
-kernel2 = np.ones((15, 15), np.uint8)
-mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel)
-mask = cv2.morphologyEx(mask, cv2.MORPH_DILATE, kernel=kernel, iterations=2)
-mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel2)
-mask = cv2.morphologyEx(mask, cv2.MORPH_ERODE, kernel=kernel)
-cv2.imshow('After mophological operations', mask)
+    for i in images:
+        # Read the image
+        image = cv2.imread(i)                                 # CHANGE NAME OF FILE 1014, 2194
+        image = cv2.resize(image, (500, 500))
+        #cv2.imshow('Original image', image)
 
-# Final pre-processing
-res = cv2.bitwise_and(image, image, mask=mask)
-cv2.imshow("Final", res)
+        # BGR image
+        mask = cv2.inRange(image, np.array([22, 22, 58]), np.array([84, 83, 118]))
+        #cv2.imshow('Mask image', mask)
 
-#cc = cv2.connectedComponents(mask)
-#ccimg = cc[1].astype(np.uint8)
-#contour, hierarchy = cv2.findContours(ccimg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # Morphological processing
+        kernel = np.ones((5,5), np.uint8)
+        kernel2 = np.ones((15, 15), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel, iterations=2)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel2, iterations=1)
+        #cv2.imshow('After mophological operations', mask)
 
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+        # Find contours of objects
+        contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Find hand
+        hand = 0
+        maxarea = 0
+        for c in range(len(contours)):
+            tmp = cv2.contourArea(contours[c])
+            if tmp > maxarea:
+                maxarea = tmp
+                hand = c
+        x, y, w, h = cv2.boundingRect(contours[hand])
+        cv2.rectangle(image, (x,y), (x+w, y+h), [0, 0, 255], 3)
+        cv2.imwrite(newfolder + str(Counter) + '.jpg', image)
+
+        Counter += 1
+        print(Counter)
+
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
