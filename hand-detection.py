@@ -16,22 +16,30 @@ import matplotlib.pyplot as plt
 plt.plot()
 
 # Read the image
-image = cv2.imread('A1014.jpg')                                 # CHANGE NAME OF FILE
-cv2.imshow('Original image', cv2.resize(image, (500, 500)))
+image = cv2.imread('A1014.jpg')                                 # CHANGE NAME OF FILE 1014, 2194
+image = cv2.resize(image, (500, 500))
+cv2.imshow('Original image', image)
 
 # BGR image
+mask = cv2.inRange(image, np.array([22, 22, 58]), np.array([84, 83, 118]))
+cv2.imshow('Mask image', mask)
+
+# Morphological processing
 kernel = np.ones((5,5), np.uint8)
-mask = cv2.inRange(image, np.array([7, 6, 40]), np.array([94, 102, 140]))
+kernel2 = np.ones((15, 15), np.uint8)
 mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel=kernel)
-mask = cv2.morphologyEx(mask, cv2.MORPH_DILATE, kernel=kernel)
-cv2.imshow('After mophological operations', cv2.resize(mask, (500, 500)))
+mask = cv2.morphologyEx(mask, cv2.MORPH_DILATE, kernel=kernel, iterations=2)
+mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel=kernel2)
+mask = cv2.morphologyEx(mask, cv2.MORPH_ERODE, kernel=kernel)
+cv2.imshow('After mophological operations', mask)
+
+# Final pre-processing
+res = cv2.bitwise_and(image, image, mask=mask)
+cv2.imshow("Final", res)
+
 #cc = cv2.connectedComponents(mask)
 #ccimg = cc[1].astype(np.uint8)
 #contour, hierarchy = cv2.findContours(ccimg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-# Convert image to HSV                                              FAILED!!!
-#hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-#hsv_image = hsv_image[:, :, 0]
-#cv2.imshow('HSV image', cv2.resize(hsv_image, (500, 500)))
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
+cv2.waitKey(0)
+cv2.destroyAllWindows()
