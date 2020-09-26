@@ -25,7 +25,10 @@ def processImage(image):
     cv2.imshow('Original image', image)
 
     # BGR image
-    mask = cv2.inRange(image, np.array([70, 103, 114]), np.array([172, 184, 207]))
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    mask1 = cv2.inRange(image, np.array([0, 17, 135]), np.array([24, 90, 221]))
+    mask2 = cv2.inRange(image, np.array([165, 0, 0]), np.array([180, 0, 0]))
+    mask = mask1 + mask2
     cv2.imshow('Mask image', mask)
 
     # Morphological processing
